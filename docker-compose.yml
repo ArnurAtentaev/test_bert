@@ -60,7 +60,7 @@ services:
 
   tracking_server:
     restart: unless-stopped
-    build: ./ML_flow_server
+    build: ./mlflow-docker
     image: mlflow_server
     container_name: mlflow_server
     ports:
@@ -71,11 +71,14 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - MLFLOW_S3_ENDPOINT_URL=http://s3:${MINIO_PORT_API}
     command: >
+      /bin/bash -c "
+      pip install --no-cache-dir psycopg2-binary boto3 &&
       mlflow server
       --backend-store-uri postgresql://${PG_USER}:${PG_PASSWORD}@db:${PG_PORT_SERVICE}/${PG_DATABASE}
       --host 0.0.0.0
       --port ${MLFLOW_PORT_SERVICE}
       --default-artifact-root s3://mlflow/
+      "
     depends_on:
       db:
         condition: service_healthy
